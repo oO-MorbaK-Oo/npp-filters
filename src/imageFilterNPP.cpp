@@ -156,13 +156,25 @@ int main(int argc, char* argv[])
     {
         std::string sFilename;
         std::string sType;
-        char* arg = nullptr;
+        std::string sBorderType;
         const std::vector<std::string> filterTypes = {
             "box",
             "sobel_h",
             "sobel_v",
             "roberts_up",
             "roberts_down",
+            "laplace",
+            "gauss",
+            "highpass",
+            "lowpass"
+        };
+
+        const std::vector<std::string> borderTypes = {
+            "none",
+            "constant",
+            "replicate",
+            "wrap",
+            "mirror",
         };
 
         findCudaDevice(argc, (const char**)argv);
@@ -172,6 +184,8 @@ int main(int argc, char* argv[])
             exit(EXIT_SUCCESS);
         }
 
+        // Filter type
+        char* arg = nullptr;
         if (checkCmdLineFlag(argc, (const char**)argv, "type"))
         {
             getCmdLineArgumentString(argc, (const char**)argv, "type", &arg);
@@ -186,12 +200,33 @@ int main(int argc, char* argv[])
             sType = filterTypes[0];
         }
 
-        // check filter type validity
         if (std::find(filterTypes.begin(), filterTypes.end(), sType) == filterTypes.end())
         {
             sType = filterTypes[0];
         }
 
+        // Border type
+        arg = nullptr;
+        if (checkCmdLineFlag(argc, (const char**)argv, "border"))
+        {
+            getCmdLineArgumentString(argc, (const char**)argv, "border", &arg);
+        }
+
+        if (arg)
+        {
+            sBorderType = arg;
+        }
+        else
+        {
+            sBorderType = borderTypes[1];
+        }
+
+        if (std::find(borderTypes.begin(), borderTypes.end(), sBorderType) == borderTypes.end())
+        {
+            sBorderType = borderTypes[1];
+        }
+
+        arg = nullptr;
         if (checkCmdLineFlag(argc, (const char**)argv, "input"))
         {
             getCmdLineArgumentString(argc, (const char**)argv, "input", &arg);
@@ -243,7 +278,7 @@ int main(int argc, char* argv[])
             sResultFilename = sResultFilename.substr(0, dot);
         }
 
-        sResultFilename += "_filter_" + sType + ".png";
+        sResultFilename += "_filter_" + sType + "_" + sBorderType + ".png";
 
         if (checkCmdLineFlag(argc, (const char**)argv, "output"))
         {
@@ -270,46 +305,188 @@ int main(int argc, char* argv[])
         // allocate device image for the rotated image
         npp::ImageNPP_8u_C3 oDeviceDst(oSizeROI.width, oSizeROI.height);
 
+        NppiBorderType eBorderType = NPP_BORDER_NONE;
+        if (sBorderType == "constant")
+        {
+            eBorderType = NPP_BORDER_CONSTANT;
+        }
+        else if (sBorderType == "replicate")
+        {
+            eBorderType = NPP_BORDER_REPLICATE;
+        }
+        else if (sBorderType == "wrap")
+        {
+            eBorderType = NPP_BORDER_WRAP;
+        }
+        else if (sBorderType == "mirror")
+        {
+            eBorderType = NPP_BORDER_MIRROR;
+        }
+
+
+
         // run filter box
         if (sType == "box")
         {
+            // TODO: select maskSize & anchor point
             NppiSize oMaskSize = { 5, 5 };
             NppiPoint oAnchor = { oMaskSize.width / 2, oMaskSize.height / 2 };
 
-            NPP_CHECK_NPP(nppiFilterBoxBorder_8u_C3R(
-                oDeviceSrc.data(), oDeviceSrc.pitch(), oSrcSize, oSrcOffset,
-                oDeviceDst.data(), oDeviceDst.pitch(),
-                oSizeROI, oMaskSize, oAnchor, NPP_BORDER_REPLICATE));
+            if (eBorderType == NPP_BORDER_NONE) {
+                NPP_CHECK_NPP(nppiFilterBox_8u_C3R(
+                    oDeviceSrc.data(), oDeviceSrc.pitch(),
+                    oDeviceDst.data(), oDeviceDst.pitch(),
+                    oSizeROI, oMaskSize, oAnchor));
+            }
+            else
+            {
+                NPP_CHECK_NPP(nppiFilterBoxBorder_8u_C3R(
+                    oDeviceSrc.data(), oDeviceSrc.pitch(), oSrcSize, oSrcOffset,
+                    oDeviceDst.data(), oDeviceDst.pitch(),
+                    oSizeROI, oMaskSize, oAnchor, eBorderType));
+            }
         }
         else if (sType == "sobel_h")
         {
-            NPP_CHECK_NPP(nppiFilterSobelHorizBorder_8u_C3R(
-                oDeviceSrc.data(), oDeviceSrc.pitch(), oSrcSize, oSrcOffset,
-                oDeviceDst.data(), oDeviceDst.pitch(),
-                oSizeROI, NPP_BORDER_REPLICATE));
+
+            if (eBorderType == NPP_BORDER_NONE)
+            {
+                NPP_CHECK_NPP(nppiFilterSobelHoriz_8u_C3R(
+                    oDeviceSrc.data(), oDeviceSrc.pitch(),
+                    oDeviceDst.data(), oDeviceDst.pitch(),
+                    oSizeROI));
+            }
+            else
+            {
+                NPP_CHECK_NPP(nppiFilterSobelHorizBorder_8u_C3R(
+                    oDeviceSrc.data(), oDeviceSrc.pitch(), oSrcSize, oSrcOffset,
+                    oDeviceDst.data(), oDeviceDst.pitch(),
+                    oSizeROI, eBorderType));
+            }
         }
         else if (sType == "sobel_v")
         {
-            NPP_CHECK_NPP(nppiFilterSobelVertBorder_8u_C3R(
-                oDeviceSrc.data(), oDeviceSrc.pitch(), oSrcSize, oSrcOffset,
-                oDeviceDst.data(), oDeviceDst.pitch(),
-                oSizeROI, NPP_BORDER_REPLICATE));
+            if (eBorderType == NPP_BORDER_NONE)
+            {
+                NPP_CHECK_NPP(nppiFilterSobelVert_8u_C3R(
+                    oDeviceSrc.data(), oDeviceSrc.pitch(),
+                    oDeviceDst.data(), oDeviceDst.pitch(),
+                    oSizeROI));
+            }
+            else
+            {
+                NPP_CHECK_NPP(nppiFilterSobelVertBorder_8u_C3R(
+                    oDeviceSrc.data(), oDeviceSrc.pitch(), oSrcSize, oSrcOffset,
+                    oDeviceDst.data(), oDeviceDst.pitch(),
+                    oSizeROI, eBorderType));
+            }
         }
         else if (sType == "roberts_up")
         {
-            NPP_CHECK_NPP(nppiFilterRobertsUpBorder_8u_C3R(
-                oDeviceSrc.data(), oDeviceSrc.pitch(), oSrcSize, oSrcOffset,
-                oDeviceDst.data(), oDeviceDst.pitch(),
-                oSizeROI, NPP_BORDER_REPLICATE));
+            if (eBorderType == NPP_BORDER_NONE)
+            {
+                NPP_CHECK_NPP(nppiFilterRobertsUp_8u_C3R(
+                    oDeviceSrc.data(), oDeviceSrc.pitch(),
+                    oDeviceDst.data(), oDeviceDst.pitch(),
+                    oSizeROI));
+            }
+            else
+            {
+                NPP_CHECK_NPP(nppiFilterRobertsUpBorder_8u_C3R(
+                    oDeviceSrc.data(), oDeviceSrc.pitch(), oSrcSize, oSrcOffset,
+                    oDeviceDst.data(), oDeviceDst.pitch(),
+                    oSizeROI, eBorderType));
+            }
         }
         else if (sType == "roberts_down")
         {
-            NPP_CHECK_NPP(nppiFilterRobertsDownBorder_8u_C3R(
-                oDeviceSrc.data(), oDeviceSrc.pitch(), oSrcSize, oSrcOffset,
-                oDeviceDst.data(), oDeviceDst.pitch(),
-                oSizeROI, NPP_BORDER_REPLICATE));
+            if (eBorderType == NPP_BORDER_NONE)
+            {
+                NPP_CHECK_NPP(nppiFilterRobertsDown_8u_C3R(
+                    oDeviceSrc.data(), oDeviceSrc.pitch(),
+                    oDeviceDst.data(), oDeviceDst.pitch(),
+                    oSizeROI));
+            }
+            else
+            {
+                NPP_CHECK_NPP(nppiFilterRobertsDownBorder_8u_C3R(
+                    oDeviceSrc.data(), oDeviceSrc.pitch(), oSrcSize, oSrcOffset,
+                    oDeviceDst.data(), oDeviceDst.pitch(),
+                    oSizeROI, eBorderType));
+            }
         }
-
+        else if (sType == "laplace")
+        {
+            // TODO: select mask size
+            if (eBorderType == NPP_BORDER_NONE)
+            {
+                NPP_CHECK_NPP(nppiFilterLaplace_8u_C3R(
+                    oDeviceSrc.data(), oDeviceSrc.pitch(),
+                    oDeviceDst.data(), oDeviceDst.pitch(),
+                    oSizeROI, NPP_MASK_SIZE_5_X_5));
+            }
+            else
+            {
+                NPP_CHECK_NPP(nppiFilterLaplaceBorder_8u_C3R(
+                    oDeviceSrc.data(), oDeviceSrc.pitch(), oSrcSize, oSrcOffset,
+                    oDeviceDst.data(), oDeviceDst.pitch(),
+                    oSizeROI, NPP_MASK_SIZE_5_X_5, eBorderType));
+            }
+        }
+        else if (sType == "gauss")
+        {
+            // TODO: select mask size
+            if (eBorderType == NPP_BORDER_NONE)
+            {
+                NPP_CHECK_NPP(nppiFilterGauss_8u_C3R(
+                    oDeviceSrc.data(), oDeviceSrc.pitch(),
+                    oDeviceDst.data(), oDeviceDst.pitch(),
+                    oSizeROI, NPP_MASK_SIZE_5_X_5));
+            }
+            else
+            {
+                NPP_CHECK_NPP(nppiFilterGaussBorder_8u_C3R(
+                    oDeviceSrc.data(), oDeviceSrc.pitch(), oSrcSize, oSrcOffset,
+                    oDeviceDst.data(), oDeviceDst.pitch(),
+                    oSizeROI, NPP_MASK_SIZE_5_X_5, eBorderType));
+            }
+        }
+        else if (sType == "highpass")
+        {
+            // TODO: select mask size
+            if (eBorderType == NPP_BORDER_NONE)
+            {
+                NPP_CHECK_NPP(nppiFilterHighPass_8u_C3R(
+                    oDeviceSrc.data(), oDeviceSrc.pitch(),
+                    oDeviceDst.data(), oDeviceDst.pitch(),
+                    oSizeROI, NPP_MASK_SIZE_5_X_5));
+            }
+            else
+            {
+                NPP_CHECK_NPP(nppiFilterHighPassBorder_8u_C3R(
+                    oDeviceSrc.data(), oDeviceSrc.pitch(), oSrcSize, oSrcOffset,
+                    oDeviceDst.data(), oDeviceDst.pitch(),
+                    oSizeROI, NPP_MASK_SIZE_5_X_5, eBorderType));
+            }
+        }
+        else if (sType == "lowpass")
+        {
+            // TODO: select mask size
+            if (eBorderType == NPP_BORDER_NONE)
+            {
+                NPP_CHECK_NPP(nppiFilterLowPass_8u_C3R(
+                    oDeviceSrc.data(), oDeviceSrc.pitch(),
+                    oDeviceDst.data(), oDeviceDst.pitch(),
+                    oSizeROI, NPP_MASK_SIZE_5_X_5));
+            }
+            else
+            {
+                NPP_CHECK_NPP(nppiFilterLowPassBorder_8u_C3R(
+                    oDeviceSrc.data(), oDeviceSrc.pitch(), oSrcSize, oSrcOffset,
+                    oDeviceDst.data(), oDeviceDst.pitch(),
+                    oSizeROI, NPP_MASK_SIZE_5_X_5, eBorderType));
+            }
+        }
 
         // declare a host image for the result
         npp::ImageCPU_8u_C3 oHostDst(oDeviceDst.size());
