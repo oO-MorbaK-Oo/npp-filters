@@ -37,6 +37,7 @@
 #include <ImagesNPP.h>
 
 #include <string.h>
+#include <vector>
 #include <fstream>
 #include <iostream>
 
@@ -51,9 +52,9 @@
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "stb_image/stb_image_write.h"
 
-// Load 8,24,32 bits image using stb_image
-// and return an npp::ImageCPU_8u_C4
-void loadImage(const std::string& rFileName, npp::ImageCPU_8u_C4& rImage)
+ // Load 8,24,32 bits image using stb_image
+ // and return an npp::ImageCPU_8u_C3
+void loadImage(const std::string& rFileName, npp::ImageCPU_8u_C3& rImage)
 {
     int width = 0, height = 0, channels = 0;
     uint8_t* img = stbi_load(rFileName.c_str(), &width, &height, &channels, 0);
@@ -68,7 +69,7 @@ void loadImage(const std::string& rFileName, npp::ImageCPU_8u_C4& rImage)
         throw npp::Exception("loadImage failed (invalid pixel format)");
     }
 
-    npp::ImageCPU_8u_C4 oImage(width, height);
+    npp::ImageCPU_8u_C3 oImage(width, height);
     Npp8u* pDstLine = oImage.data();
     const unsigned int nDstPitch = oImage.pitch();
     const uint8_t* pSrcLine = img;
@@ -84,31 +85,29 @@ void loadImage(const std::string& rFileName, npp::ImageCPU_8u_C4& rImage)
                 pDstPixels[iPixel].x = pSrcLine[iPixel];
                 pDstPixels[iPixel].y = pSrcLine[iPixel];
                 pDstPixels[iPixel].z = pSrcLine[iPixel];
-                pDstPixels[iPixel].w = 255;
             }
             pSrcLine += nSrcPitch;
             pDstLine += nDstPitch;
         }
     }
-    else if (channels == 3) {
-        // RGB
+    else if (channels == 4) {
+        // RGBA
         for (size_t iLine = 0; iLine < height; ++iLine)
         {
-            const  npp::Pixel<Npp8u, 3>* pSrcPixels = (npp::Pixel<Npp8u, 3>*)pSrcLine;
-            npp::Pixel<Npp8u, 4>* pDstPixels = (npp::Pixel<Npp8u, 4>*)pDstLine;
+            const  npp::Pixel<Npp8u, 4>* pSrcPixels = (npp::Pixel<Npp8u, 4>*)pSrcLine;
+            npp::Pixel<Npp8u, 3>* pDstPixels = (npp::Pixel<Npp8u, 3>*)pDstLine;
             for (size_t iPixel = 0; iPixel < width; ++iPixel)
             {
                 pDstPixels[iPixel].x = pSrcPixels[iPixel].x;
                 pDstPixels[iPixel].y = pSrcPixels[iPixel].y;
                 pDstPixels[iPixel].z = pSrcPixels[iPixel].z;
-                pDstPixels[iPixel].w = 255;
             }
             pSrcLine += nSrcPitch;
             pDstLine += nDstPitch;
         }
     }
     else {
-        // RGBA
+        // RGB
         for (size_t iLine = 0; iLine < height; ++iLine)
         {
             memcpy(pDstLine, pSrcLine, width * channels);
@@ -123,9 +122,9 @@ void loadImage(const std::string& rFileName, npp::ImageCPU_8u_C4& rImage)
     stbi_image_free(img);
 }
 
-void saveImage(const std::string& rFileName, const npp::ImageCPU_8u_C4& rImage)
+void saveImage(const std::string& rFileName, const npp::ImageCPU_8u_C3& rImage)
 {
-    stbi_write_png(rFileName.c_str(), rImage.width(), rImage.height(), 4, rImage.data(), rImage.pitch());
+    stbi_write_png(rFileName.c_str(), rImage.width(), rImage.height(), 3, rImage.data(), rImage.pitch());
 }
 
 bool printfNPPinfo(int argc, char* argv[])
@@ -156,7 +155,15 @@ int main(int argc, char* argv[])
     try
     {
         std::string sFilename;
-        char* filePath;
+        std::string sType;
+        char* arg = nullptr;
+        const std::vector<std::string> filterTypes = {
+            "box",
+            "sobel_h",
+            "sobel_v",
+            "roberts_up",
+            "roberts_down",
+        };
 
         findCudaDevice(argc, (const char**)argv);
 
@@ -165,18 +172,38 @@ int main(int argc, char* argv[])
             exit(EXIT_SUCCESS);
         }
 
-        if (checkCmdLineFlag(argc, (const char**)argv, "input"))
+        if (checkCmdLineFlag(argc, (const char**)argv, "type"))
         {
-            getCmdLineArgumentString(argc, (const char**)argv, "input", &filePath);
+            getCmdLineArgumentString(argc, (const char**)argv, "type", &arg);
+        }
+
+        if (arg)
+        {
+            sType = arg;
         }
         else
         {
-            filePath = sdkFindFilePath("Lena.png", argv[0]);
+            sType = filterTypes[0];
         }
 
-        if (filePath)
+        // check filter type validity
+        if (std::find(filterTypes.begin(), filterTypes.end(), sType) == filterTypes.end())
         {
-            sFilename = filePath;
+            sType = filterTypes[0];
+        }
+
+        if (checkCmdLineFlag(argc, (const char**)argv, "input"))
+        {
+            getCmdLineArgumentString(argc, (const char**)argv, "input", &arg);
+        }
+        else
+        {
+            arg = sdkFindFilePath("Lena.png", argv[0]);
+        }
+
+        if (arg)
+        {
+            sFilename = arg;
         }
         else
         {
@@ -216,7 +243,7 @@ int main(int argc, char* argv[])
             sResultFilename = sResultFilename.substr(0, dot);
         }
 
-        sResultFilename += "_filter.png";
+        sResultFilename += "_filter_" + sType + ".png";
 
         if (checkCmdLineFlag(argc, (const char**)argv, "output"))
         {
@@ -227,12 +254,12 @@ int main(int argc, char* argv[])
         }
 
         // declare a host image object for an 8-bit grayscale image
-        npp::ImageCPU_8u_C4 oHostSrc;
+        npp::ImageCPU_8u_C3 oHostSrc;
         // load gray-scale image from disk
         loadImage(sFilename, oHostSrc);
         // declare a device image and copy construct from the host image,
         // i.e. upload host to device
-        npp::ImageNPP_8u_C4 oDeviceSrc(oHostSrc);
+        npp::ImageNPP_8u_C3 oDeviceSrc(oHostSrc);
 
         // create struct with the ROI size
         NppiSize oSrcSize = { (int)oDeviceSrc.width(), (int)oDeviceSrc.height() };
@@ -241,19 +268,51 @@ int main(int argc, char* argv[])
 
 
         // allocate device image for the rotated image
-        npp::ImageNPP_8u_C4 oDeviceDst(oSizeROI.width, oSizeROI.height);
-
-        NppiSize oMaskSize = { 5, 5 };
-        NppiPoint oAnchor = { oMaskSize.width / 2, oMaskSize.height / 2 };
+        npp::ImageNPP_8u_C3 oDeviceDst(oSizeROI.width, oSizeROI.height);
 
         // run filter box
-        NPP_CHECK_NPP(nppiFilterBoxBorder_8u_C4R(
-            oDeviceSrc.data(), oDeviceSrc.pitch(), oSrcSize, oSrcOffset,
-            oDeviceDst.data(), oDeviceDst.pitch(),
-            oSizeROI, oMaskSize, oAnchor, NPP_BORDER_REPLICATE));
+        if (sType == "box")
+        {
+            NppiSize oMaskSize = { 5, 5 };
+            NppiPoint oAnchor = { oMaskSize.width / 2, oMaskSize.height / 2 };
+
+            NPP_CHECK_NPP(nppiFilterBoxBorder_8u_C3R(
+                oDeviceSrc.data(), oDeviceSrc.pitch(), oSrcSize, oSrcOffset,
+                oDeviceDst.data(), oDeviceDst.pitch(),
+                oSizeROI, oMaskSize, oAnchor, NPP_BORDER_REPLICATE));
+        }
+        else if (sType == "sobel_h")
+        {
+            NPP_CHECK_NPP(nppiFilterSobelHorizBorder_8u_C3R(
+                oDeviceSrc.data(), oDeviceSrc.pitch(), oSrcSize, oSrcOffset,
+                oDeviceDst.data(), oDeviceDst.pitch(),
+                oSizeROI, NPP_BORDER_REPLICATE));
+        }
+        else if (sType == "sobel_v")
+        {
+            NPP_CHECK_NPP(nppiFilterSobelVertBorder_8u_C3R(
+                oDeviceSrc.data(), oDeviceSrc.pitch(), oSrcSize, oSrcOffset,
+                oDeviceDst.data(), oDeviceDst.pitch(),
+                oSizeROI, NPP_BORDER_REPLICATE));
+        }
+        else if (sType == "roberts_up")
+        {
+            NPP_CHECK_NPP(nppiFilterRobertsUpBorder_8u_C3R(
+                oDeviceSrc.data(), oDeviceSrc.pitch(), oSrcSize, oSrcOffset,
+                oDeviceDst.data(), oDeviceDst.pitch(),
+                oSizeROI, NPP_BORDER_REPLICATE));
+        }
+        else if (sType == "roberts_down")
+        {
+            NPP_CHECK_NPP(nppiFilterRobertsDownBorder_8u_C3R(
+                oDeviceSrc.data(), oDeviceSrc.pitch(), oSrcSize, oSrcOffset,
+                oDeviceDst.data(), oDeviceDst.pitch(),
+                oSizeROI, NPP_BORDER_REPLICATE));
+        }
+
 
         // declare a host image for the result
-        npp::ImageCPU_8u_C4 oHostDst(oDeviceDst.size());
+        npp::ImageCPU_8u_C3 oHostDst(oDeviceDst.size());
         // and copy the device result data into it
         oDeviceDst.copyTo(oHostDst.data(), oHostDst.pitch());
 
