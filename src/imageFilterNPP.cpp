@@ -33,7 +33,6 @@
 #endif
 
 #include <Exceptions.h>
-#include <ImageIO.h>
 #include <ImagesCPU.h>
 #include <ImagesNPP.h>
 
@@ -47,50 +46,132 @@
 #include <helper_cuda.h>
 #include <helper_string.h>
 
-bool printfNPPinfo(int argc, char *argv[])
+#define STB_IMAGE_IMPLEMENTATION
+#include "stb_image/stb_image.h"
+#define STB_IMAGE_WRITE_IMPLEMENTATION
+#include "stb_image/stb_image_write.h"
+
+// Load 8,24,32 bits image using stb_image
+// and return an npp::ImageCPU_8u_C4
+void loadImage(const std::string& rFileName, npp::ImageCPU_8u_C4& rImage)
 {
-    const NppLibraryVersion *libVer = nppGetLibVersion();
+    int width = 0, height = 0, channels = 0;
+    uint8_t* img = stbi_load(rFileName.c_str(), &width, &height, &channels, 0);
+    if (img == NULL)
+    {
+        printf("Error: Can't load %s image\n", rFileName.c_str());
+        throw npp::Exception("loadImage failed (stbi_load return null)");
+    }
+    if (channels != 1 && channels != 3 && channels != 4) {
+        stbi_image_free(img);
+        printf("Error: %s must be an 8, 24 or 32 bits image\n", rFileName.c_str());
+        throw npp::Exception("loadImage failed (invalid pixel format)");
+    }
+
+    npp::ImageCPU_8u_C4 oImage(width, height);
+    Npp8u* pDstLine = oImage.data();
+    const unsigned int nDstPitch = oImage.pitch();
+    const uint8_t* pSrcLine = img;
+    const unsigned int nSrcPitch = width * channels;
+
+    if (channels == 1) {
+        // Grey
+        for (size_t iLine = 0; iLine < height; ++iLine)
+        {
+            npp::Pixel<Npp8u, 4>* pDstPixels = (npp::Pixel<Npp8u, 4>*)pDstLine;
+            for (size_t iPixel = 0; iPixel < width; ++iPixel)
+            {
+                pDstPixels[iPixel].x = pSrcLine[iPixel];
+                pDstPixels[iPixel].y = pSrcLine[iPixel];
+                pDstPixels[iPixel].z = pSrcLine[iPixel];
+                pDstPixels[iPixel].w = 255;
+            }
+            pSrcLine += nSrcPitch;
+            pDstLine += nDstPitch;
+        }
+    }
+    else if (channels == 3) {
+        // RGB
+        for (size_t iLine = 0; iLine < height; ++iLine)
+        {
+            const  npp::Pixel<Npp8u, 3>* pSrcPixels = (npp::Pixel<Npp8u, 3>*)pSrcLine;
+            npp::Pixel<Npp8u, 4>* pDstPixels = (npp::Pixel<Npp8u, 4>*)pDstLine;
+            for (size_t iPixel = 0; iPixel < width; ++iPixel)
+            {
+                pDstPixels[iPixel].x = pSrcPixels[iPixel].x;
+                pDstPixels[iPixel].y = pSrcPixels[iPixel].y;
+                pDstPixels[iPixel].z = pSrcPixels[iPixel].z;
+                pDstPixels[iPixel].w = 255;
+            }
+            pSrcLine += nSrcPitch;
+            pDstLine += nDstPitch;
+        }
+    }
+    else {
+        // RGBA
+        for (size_t iLine = 0; iLine < height; ++iLine)
+        {
+            memcpy(pDstLine, pSrcLine, width * channels);
+            pSrcLine += nSrcPitch;
+            pDstLine += nDstPitch;
+        }
+    }
+
+    // swap the user given image with our result image, effecively
+    // moving our newly loaded image data into the user provided shell
+    oImage.swap(rImage);
+    stbi_image_free(img);
+}
+
+void saveImage(const std::string& rFileName, const npp::ImageCPU_8u_C4& rImage)
+{
+    stbi_write_png(rFileName.c_str(), rImage.width(), rImage.height(), 4, rImage.data(), rImage.pitch());
+}
+
+bool printfNPPinfo(int argc, char* argv[])
+{
+    const NppLibraryVersion* libVer = nppGetLibVersion();
 
     printf("NPP Library Version %d.%d.%d\n", libVer->major, libVer->minor,
-           libVer->build);
+        libVer->build);
 
     int driverVersion, runtimeVersion;
     cudaDriverGetVersion(&driverVersion);
     cudaRuntimeGetVersion(&runtimeVersion);
 
     printf("  CUDA Driver  Version: %d.%d\n", driverVersion / 1000,
-           (driverVersion % 100) / 10);
+        (driverVersion % 100) / 10);
     printf("  CUDA Runtime Version: %d.%d\n", runtimeVersion / 1000,
-           (runtimeVersion % 100) / 10);
+        (runtimeVersion % 100) / 10);
 
     // Min spec is SM 1.0 devices
     bool bVal = checkCudaCapabilities(1, 0);
     return bVal;
 }
 
-int main(int argc, char *argv[])
+int main(int argc, char* argv[])
 {
     printf("%s Starting...\n\n", argv[0]);
 
     try
     {
         std::string sFilename;
-        char *filePath;
+        char* filePath;
 
-        findCudaDevice(argc, (const char **)argv);
+        findCudaDevice(argc, (const char**)argv);
 
         if (printfNPPinfo(argc, argv) == false)
         {
             exit(EXIT_SUCCESS);
         }
 
-        if (checkCmdLineFlag(argc, (const char **)argv, "input"))
+        if (checkCmdLineFlag(argc, (const char**)argv, "input"))
         {
-            getCmdLineArgumentString(argc, (const char **)argv, "input", &filePath);
+            getCmdLineArgumentString(argc, (const char**)argv, "input", &filePath);
         }
         else
         {
-            filePath = sdkFindFilePath("Lena.pgm", argv[0]);
+            filePath = sdkFindFilePath("Lena.png", argv[0]);
         }
 
         if (filePath)
@@ -99,25 +180,24 @@ int main(int argc, char *argv[])
         }
         else
         {
-            sFilename = "Lena.pgm";
+            sFilename = "Lena.png";
         }
 
         // if we specify the filename at the command line, then we only test
         // sFilename[0].
         int file_errors = 0;
         std::ifstream infile(sFilename.data(), std::ifstream::in);
-
         if (infile.good())
         {
             std::cout << "nppiRotate opened: <" << sFilename.data()
-                      << "> successfully!" << std::endl;
+                << "> successfully!" << std::endl;
             file_errors = 0;
             infile.close();
         }
         else
         {
             std::cout << "nppiRotate unable to open: <" << sFilename.data() << ">"
-                      << std::endl;
+                << std::endl;
             file_errors++;
             infile.close();
         }
@@ -136,48 +216,44 @@ int main(int argc, char *argv[])
             sResultFilename = sResultFilename.substr(0, dot);
         }
 
-        sResultFilename += "_rotate.pgm";
+        sResultFilename += "_filter.png";
 
-        if (checkCmdLineFlag(argc, (const char **)argv, "output"))
+        if (checkCmdLineFlag(argc, (const char**)argv, "output"))
         {
-            char *outputFilePath;
-            getCmdLineArgumentString(argc, (const char **)argv, "output",
-                                     &outputFilePath);
+            char* outputFilePath;
+            getCmdLineArgumentString(argc, (const char**)argv, "output",
+                &outputFilePath);
             sResultFilename = outputFilePath;
         }
 
         // declare a host image object for an 8-bit grayscale image
-        npp::ImageCPU_8u_C1 oHostSrc;
+        npp::ImageCPU_8u_C4 oHostSrc;
         // load gray-scale image from disk
-        npp::loadImage(sFilename, oHostSrc);
+        loadImage(sFilename, oHostSrc);
         // declare a device image and copy construct from the host image,
         // i.e. upload host to device
-        npp::ImageNPP_8u_C1 oDeviceSrc(oHostSrc);
+        npp::ImageNPP_8u_C4 oDeviceSrc(oHostSrc);
 
         // create struct with the ROI size
-        NppiSize oSrcSize = {(int)oDeviceSrc.width(), (int)oDeviceSrc.height()};
-        NppiPoint oSrcOffset = {0, 0};
-        NppiSize oSizeROI = {(int)oDeviceSrc.width(), (int)oDeviceSrc.height()};
+        NppiSize oSrcSize = { (int)oDeviceSrc.width(), (int)oDeviceSrc.height() };
+        NppiPoint oSrcOffset = { 0, 0 };
+        NppiSize oSizeROI = { (int)oDeviceSrc.width(), (int)oDeviceSrc.height() };
 
-        // Calculate the bounding box of the rotated image
-        NppiRect oBoundingBox;
-        double angle = 45.0; // Rotation angle in degrees
-        NPP_CHECK_NPP(nppiGetRotateBound(oSrcSize, angle, &oBoundingBox));
 
         // allocate device image for the rotated image
-        npp::ImageNPP_8u_C1 oDeviceDst(oBoundingBox.width, oBoundingBox.height);
+        npp::ImageNPP_8u_C4 oDeviceDst(oSizeROI.width, oSizeROI.height);
 
-        // Set the rotation point (center of the image)
-        NppiPoint oRotationCenter = {(int)(oSrcSize.width / 2), (int)(oSrcSize.height / 2)};
+        NppiSize oMaskSize = { 5, 5 };
+        NppiPoint oAnchor = { oMaskSize.width / 2, oMaskSize.height / 2 };
 
-        // run the rotation
-        NPP_CHECK_NPP(nppiRotate_8u_C1R(
-            oDeviceSrc.data(), oSrcSize, oDeviceSrc.pitch(), oSrcOffset,
-            oDeviceDst.data(), oDeviceDst.pitch(), oBoundingBox, angle, oRotationCenter,
-            NPPI_INTER_NN));
+        // run filter box
+        NPP_CHECK_NPP(nppiFilterBoxBorder_8u_C4R(
+            oDeviceSrc.data(), oDeviceSrc.pitch(), oSrcSize, oSrcOffset,
+            oDeviceDst.data(), oDeviceDst.pitch(),
+            oSizeROI, oMaskSize, oAnchor, NPP_BORDER_REPLICATE));
 
         // declare a host image for the result
-        npp::ImageCPU_8u_C1 oHostDst(oDeviceDst.size());
+        npp::ImageCPU_8u_C4 oHostDst(oDeviceDst.size());
         // and copy the device result data into it
         oDeviceDst.copyTo(oHostDst.data(), oHostDst.pitch());
 
@@ -189,7 +265,7 @@ int main(int argc, char *argv[])
 
         exit(EXIT_SUCCESS);
     }
-    catch (npp::Exception &rException)
+    catch (npp::Exception& rException)
     {
         std::cerr << "Program error! The following exception occurred: \n";
         std::cerr << rException << std::endl;

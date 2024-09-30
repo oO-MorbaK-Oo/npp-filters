@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.11.35312.102
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "npp-filters", "npp-filters.vcxproj", "{BFAA9DC4-C059-436B-9677-0E851E5C23AF}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|x64 = Debug|x64
+		Release|x64 = Release|x64
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{BFAA9DC4-C059-436B-9677-0E851E5C23AF}.Debug|x64.ActiveCfg = Debug|x64
+		{BFAA9DC4-C059-436B-9677-0E851E5C23AF}.Debug|x64.Build.0 = Debug|x64
+		{BFAA9DC4-C059-436B-9677-0E851E5C23AF}.Release|x64.ActiveCfg = Release|x64
+		{BFAA9DC4-C059-436B-9677-0E851E5C23AF}.Release|x64.Build.0 = Release|x64
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {F1FB758D-333F-48A9-82F4-72086A114BAC}
+	EndGlobalSection
+EndGlobal

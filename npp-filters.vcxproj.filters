@@ -1,0 +1,75 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="src">
+      <UniqueIdentifier>{23f6ff39-e514-4bcc-91e5-7d54aea077b0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include">
+      <UniqueIdentifier>{2a9b62b8-1f6b-4b27-bd39-6ea71f307e12}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include\stb_image">
+      <UniqueIdentifier>{11281b35-eb97-4d08-892a-c0d89cb6a9e9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include\UtilNPP">
+      <UniqueIdentifier>{24f175d8-9bec-4f47-b924-9bedde9087e5}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="src\imageFilterNPP.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="include\helper_cuda.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\helper_string.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\stb_image\stb_image.h">
+      <Filter>include\stb_image</Filter>
+    </ClInclude>
+    <ClInclude Include="include\stb_image\stb_image_write.h">
+      <Filter>include\stb_image</Filter>
+    </ClInclude>
+    <ClInclude Include="include\UtilNPP\Exceptions.h">
+      <Filter>include\UtilNPP</Filter>
+    </ClInclude>
+    <ClInclude Include="include\UtilNPP\Image.h">
+      <Filter>include\UtilNPP</Filter>
+    </ClInclude>
+    <ClInclude Include="include\UtilNPP\ImageAllocatorsCPU.h">
+      <Filter>include\UtilNPP</Filter>
+    </ClInclude>
+    <ClInclude Include="include\UtilNPP\ImageAllocatorsNPP.h">
+      <Filter>include\UtilNPP</Filter>
+    </ClInclude>
+    <ClInclude Include="include\UtilNPP\ImagePacked.h">
+      <Filter>include\UtilNPP</Filter>
+    </ClInclude>
+    <ClInclude Include="include\UtilNPP\ImagesCPU.h">
+      <Filter>include\UtilNPP</Filter>
+    </ClInclude>
+    <ClInclude Include="include\UtilNPP\ImagesNPP.h">
+      <Filter>include\UtilNPP</Filter>
+    </ClInclude>
+    <ClInclude Include="include\UtilNPP\Pixel.h">
+      <Filter>include\UtilNPP</Filter>
+    </ClInclude>
+    <ClInclude Include="include\UtilNPP\Signal.h">
+      <Filter>include\UtilNPP</Filter>
+    </ClInclude>
+    <ClInclude Include="include\UtilNPP\SignalAllocatorsCPU.h">
+      <Filter>include\UtilNPP</Filter>
+    </ClInclude>
+    <ClInclude Include="include\UtilNPP\SignalAllocatorsNPP.h">
+      <Filter>include\UtilNPP</Filter>
+    </ClInclude>
+    <ClInclude Include="include\UtilNPP\SignalsCPU.h">
+      <Filter>include\UtilNPP</Filter>
+    </ClInclude>
+    <ClInclude Include="include\UtilNPP\SignalsNPP.h">
+      <Filter>include\UtilNPP</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>

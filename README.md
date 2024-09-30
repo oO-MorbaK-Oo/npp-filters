@@ -49,17 +49,17 @@ x86_64, ppc64le, armv7l
 ## CUDA APIs involved
 
 ## Dependencies needed to build/run
-[FreeImage](../../README.md#freeimage), [NPP](../../README.md#npp)
+[FreeImage](../../README.md#freeimage), [NPP](../../README.md#npp), [stb_image]
 
 ## Prerequisites
 
-Download and install the [CUDA Toolkit 11.4](https://developer.nvidia.com/cuda-downloads) for your corresponding platform.
+Download and install the [CUDA Toolkit 12.4](https://developer.nvidia.com/cuda-downloads) for your corresponding platform.
 Make sure the dependencies mentioned in [Dependencies]() section above are installed.
 
 ## Build and Run
 
 ### Windows
-The Windows samples are built using the Visual Studio IDE. Solution files (.sln) are provided for each supported version of Visual Studio, using the format:
+The Windows samples are built using the Visual Studio 2022 IDE. Solution files (.sln) are provided for each supported version of Visual Studio, using the format:
 ```
 *_vs<version>.sln - for Visual Studio <version>
 ```
