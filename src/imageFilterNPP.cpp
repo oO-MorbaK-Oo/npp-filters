@@ -326,12 +326,15 @@ int main(int argc, char* argv[])
         }
 
 
+        // TODO: read value from command line
+        NppiMaskSize eMaskSize = NPP_MASK_SIZE_5_X_5;
+        NppiSize oMaskSize = { 5, 5 };
+        NppiPoint oAnchor = { oMaskSize.width / 2, oMaskSize.height / 2 };
+        Npp32f aNoise[] = { 0.5f, 0.47f, 0.53f };
+
         // run filter box
         if (sType == "box")
         {
-            // TODO: read value from command line
-            NppiSize oMaskSize = { 5, 5 };
-            NppiPoint oAnchor = { oMaskSize.width / 2, oMaskSize.height / 2 };
 
             if (eBorderType == NPP_BORDER_NONE) {
                 NPP_CHECK_NPP(nppiFilterBox_8u_C3R(
@@ -418,74 +421,70 @@ int main(int argc, char* argv[])
         }
         else if (sType == "laplace")
         {
-            // TODO: read value from command line
             if (eBorderType == NPP_BORDER_NONE)
             {
                 NPP_CHECK_NPP(nppiFilterLaplace_8u_C3R(
                     oDeviceSrc.data(), oDeviceSrc.pitch(),
                     oDeviceDst.data(), oDeviceDst.pitch(),
-                    oSizeROI, NPP_MASK_SIZE_5_X_5));
+                    oSizeROI, eMaskSize));
             }
             else
             {
                 NPP_CHECK_NPP(nppiFilterLaplaceBorder_8u_C3R(
                     oDeviceSrc.data(), oDeviceSrc.pitch(), oSrcSize, oSrcOffset,
                     oDeviceDst.data(), oDeviceDst.pitch(),
-                    oSizeROI, NPP_MASK_SIZE_5_X_5, eBorderType));
+                    oSizeROI, eMaskSize, eBorderType));
             }
         }
         else if (sType == "gauss")
         {
-            // TODO: read value from command line
             if (eBorderType == NPP_BORDER_NONE)
             {
                 NPP_CHECK_NPP(nppiFilterGauss_8u_C3R(
                     oDeviceSrc.data(), oDeviceSrc.pitch(),
                     oDeviceDst.data(), oDeviceDst.pitch(),
-                    oSizeROI, NPP_MASK_SIZE_5_X_5));
+                    oSizeROI, eMaskSize));
             }
             else
             {
                 NPP_CHECK_NPP(nppiFilterGaussBorder_8u_C3R(
                     oDeviceSrc.data(), oDeviceSrc.pitch(), oSrcSize, oSrcOffset,
                     oDeviceDst.data(), oDeviceDst.pitch(),
-                    oSizeROI, NPP_MASK_SIZE_5_X_5, eBorderType));
+                    oSizeROI, eMaskSize, eBorderType));
             }
         }
         else if (sType == "highpass")
         {
-            // TODO: read value from command line
             if (eBorderType == NPP_BORDER_NONE)
             {
                 NPP_CHECK_NPP(nppiFilterHighPass_8u_C3R(
                     oDeviceSrc.data(), oDeviceSrc.pitch(),
                     oDeviceDst.data(), oDeviceDst.pitch(),
-                    oSizeROI, NPP_MASK_SIZE_5_X_5));
+                    oSizeROI, eMaskSize));
             }
             else
             {
                 NPP_CHECK_NPP(nppiFilterHighPassBorder_8u_C3R(
                     oDeviceSrc.data(), oDeviceSrc.pitch(), oSrcSize, oSrcOffset,
                     oDeviceDst.data(), oDeviceDst.pitch(),
-                    oSizeROI, NPP_MASK_SIZE_5_X_5, eBorderType));
+                    oSizeROI, eMaskSize, eBorderType));
             }
         }
         else if (sType == "lowpass")
         {
-            // TODO: read value from command line
             if (eBorderType == NPP_BORDER_NONE)
             {
                 NPP_CHECK_NPP(nppiFilterLowPass_8u_C3R(
                     oDeviceSrc.data(), oDeviceSrc.pitch(),
                     oDeviceDst.data(), oDeviceDst.pitch(),
-                    oSizeROI, NPP_MASK_SIZE_5_X_5));
+                    oSizeROI, eMaskSize));
             }
             else
             {
                 NPP_CHECK_NPP(nppiFilterLowPassBorder_8u_C3R(
                     oDeviceSrc.data(), oDeviceSrc.pitch(), oSrcSize, oSrcOffset,
                     oDeviceDst.data(), oDeviceDst.pitch(),
-                    oSizeROI, NPP_MASK_SIZE_5_X_5, eBorderType));
+                    oSizeROI, eMaskSize, eBorderType));
             }
         }
         else if (sType == "sharpen")
@@ -507,13 +506,9 @@ int main(int argc, char* argv[])
         }
         else if (sType == "wiener")
         {
-            // TODO: read value from command line
-            NppiSize oMaskSize = { 5, 5 };
-            NppiPoint oAnchor = { oMaskSize.width / 2, oMaskSize.height / 2 };
-            Npp32f aNoise[] = { 0.5f, 0.47f, 0.53f };
-            if (eBorderType == NPP_BORDER_NONE)
+            if (eBorderType != NPP_BORDER_REPLICATE)
             {
-                npp::Exception("Unssupported border type for wiener filter.");
+                npp::Exception("Unsupported border type for wiener filter.");
             }
             else
             {
