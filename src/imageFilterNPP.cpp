@@ -166,7 +166,9 @@ int main(int argc, char* argv[])
             "laplace",
             "gauss",
             "highpass",
-            "lowpass"
+            "lowpass",
+            "sharpen",
+            "wiener",
         };
 
         const std::vector<std::string> borderTypes = {
@@ -324,11 +326,10 @@ int main(int argc, char* argv[])
         }
 
 
-
         // run filter box
         if (sType == "box")
         {
-            // TODO: select maskSize & anchor point
+            // TODO: read value from command line
             NppiSize oMaskSize = { 5, 5 };
             NppiPoint oAnchor = { oMaskSize.width / 2, oMaskSize.height / 2 };
 
@@ -417,7 +418,7 @@ int main(int argc, char* argv[])
         }
         else if (sType == "laplace")
         {
-            // TODO: select mask size
+            // TODO: read value from command line
             if (eBorderType == NPP_BORDER_NONE)
             {
                 NPP_CHECK_NPP(nppiFilterLaplace_8u_C3R(
@@ -435,7 +436,7 @@ int main(int argc, char* argv[])
         }
         else if (sType == "gauss")
         {
-            // TODO: select mask size
+            // TODO: read value from command line
             if (eBorderType == NPP_BORDER_NONE)
             {
                 NPP_CHECK_NPP(nppiFilterGauss_8u_C3R(
@@ -453,7 +454,7 @@ int main(int argc, char* argv[])
         }
         else if (sType == "highpass")
         {
-            // TODO: select mask size
+            // TODO: read value from command line
             if (eBorderType == NPP_BORDER_NONE)
             {
                 NPP_CHECK_NPP(nppiFilterHighPass_8u_C3R(
@@ -471,7 +472,7 @@ int main(int argc, char* argv[])
         }
         else if (sType == "lowpass")
         {
-            // TODO: select mask size
+            // TODO: read value from command line
             if (eBorderType == NPP_BORDER_NONE)
             {
                 NPP_CHECK_NPP(nppiFilterLowPass_8u_C3R(
@@ -487,6 +488,42 @@ int main(int argc, char* argv[])
                     oSizeROI, NPP_MASK_SIZE_5_X_5, eBorderType));
             }
         }
+        else if (sType == "sharpen")
+        {
+            if (eBorderType == NPP_BORDER_NONE)
+            {
+                NPP_CHECK_NPP(nppiFilterSharpen_8u_C3R(
+                    oDeviceSrc.data(), oDeviceSrc.pitch(),
+                    oDeviceDst.data(), oDeviceDst.pitch(),
+                    oSizeROI));
+            }
+            else
+            {
+                NPP_CHECK_NPP(nppiFilterSharpenBorder_8u_C3R(
+                    oDeviceSrc.data(), oDeviceSrc.pitch(), oSrcSize, oSrcOffset,
+                    oDeviceDst.data(), oDeviceDst.pitch(),
+                    oSizeROI, eBorderType));
+            }
+        }
+        else if (sType == "wiener")
+        {
+            // TODO: read value from command line
+            NppiSize oMaskSize = { 5, 5 };
+            NppiPoint oAnchor = { oMaskSize.width / 2, oMaskSize.height / 2 };
+            Npp32f aNoise[] = { 0.5f, 0.47f, 0.53f };
+            if (eBorderType == NPP_BORDER_NONE)
+            {
+                npp::Exception("Unssupported border type for wiener filter.");
+            }
+            else
+            {
+                NPP_CHECK_NPP(nppiFilterWienerBorder_8u_C3R(
+                    oDeviceSrc.data(), oDeviceSrc.pitch(), oSrcSize, oSrcOffset,
+                    oDeviceDst.data(), oDeviceDst.pitch(),
+                    oSizeROI, oMaskSize, oAnchor, aNoise, eBorderType));
+            }
+        }
+
 
         // declare a host image for the result
         npp::ImageCPU_8u_C3 oHostDst(oDeviceDst.size());
