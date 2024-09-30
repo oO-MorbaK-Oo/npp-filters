@@ -155,7 +155,7 @@ int main(int argc, char* argv[])
     try
     {
         std::string sFilename;
-        std::string sType;
+        std::string sFilterType;
         std::string sBorderType;
         const std::vector<std::string> filterTypes = {
             "box",
@@ -173,10 +173,10 @@ int main(int argc, char* argv[])
 
         const std::vector<std::string> borderTypes = {
             "none",
-            "constant",
+            //"constant",
             "replicate",
-            "wrap",
-            "mirror",
+            //"wrap",
+            //"mirror",
         };
 
         findCudaDevice(argc, (const char**)argv);
@@ -188,23 +188,23 @@ int main(int argc, char* argv[])
 
         // Filter type
         char* arg = nullptr;
-        if (checkCmdLineFlag(argc, (const char**)argv, "type"))
+        if (checkCmdLineFlag(argc, (const char**)argv, "filter"))
         {
-            getCmdLineArgumentString(argc, (const char**)argv, "type", &arg);
+            getCmdLineArgumentString(argc, (const char**)argv, "filter", &arg);
         }
 
         if (arg)
         {
-            sType = arg;
+            sFilterType = arg;
         }
         else
         {
-            sType = filterTypes[0];
+            sFilterType = filterTypes[0];
         }
 
-        if (std::find(filterTypes.begin(), filterTypes.end(), sType) == filterTypes.end())
+        if (std::find(filterTypes.begin(), filterTypes.end(), sFilterType) == filterTypes.end())
         {
-            sType = filterTypes[0];
+            sFilterType = filterTypes[0];
         }
 
         // Border type
@@ -226,6 +226,20 @@ int main(int argc, char* argv[])
         if (std::find(borderTypes.begin(), borderTypes.end(), sBorderType) == borderTypes.end())
         {
             sBorderType = borderTypes[1];
+        }
+
+        // check border with filter compatibility
+        if (sFilterType != "wiener") {
+            if (sBorderType != "none" && sBorderType != "replicate") {
+                std::cout << sFilterType << " filter support none or replicate border mode" << std::endl;
+                return 0;
+            }
+        }
+        else {
+            if (sBorderType != "replicate") {
+                std::cout << sFilterType << " filter support replicate border mode" << std::endl;
+                return 0;
+            }
         }
 
         arg = nullptr;
@@ -280,7 +294,7 @@ int main(int argc, char* argv[])
             sResultFilename = sResultFilename.substr(0, dot);
         }
 
-        sResultFilename += "_filter_" + sType + "_" + sBorderType + ".png";
+        sResultFilename += "_filter_" + sFilterType + "_" + sBorderType + ".png";
 
         if (checkCmdLineFlag(argc, (const char**)argv, "output"))
         {
@@ -325,7 +339,6 @@ int main(int argc, char* argv[])
             eBorderType = NPP_BORDER_MIRROR;
         }
 
-
         // TODO: read value from command line
         NppiMaskSize eMaskSize = NPP_MASK_SIZE_5_X_5;
         NppiSize oMaskSize = { 5, 5 };
@@ -333,9 +346,8 @@ int main(int argc, char* argv[])
         Npp32f aNoise[] = { 0.5f, 0.47f, 0.53f };
 
         // run filter box
-        if (sType == "box")
+        if (sFilterType == "box")
         {
-
             if (eBorderType == NPP_BORDER_NONE) {
                 NPP_CHECK_NPP(nppiFilterBox_8u_C3R(
                     oDeviceSrc.data(), oDeviceSrc.pitch(),
@@ -350,7 +362,7 @@ int main(int argc, char* argv[])
                     oSizeROI, oMaskSize, oAnchor, eBorderType));
             }
         }
-        else if (sType == "sobel_h")
+        else if (sFilterType == "sobel_h")
         {
 
             if (eBorderType == NPP_BORDER_NONE)
@@ -368,7 +380,7 @@ int main(int argc, char* argv[])
                     oSizeROI, eBorderType));
             }
         }
-        else if (sType == "sobel_v")
+        else if (sFilterType == "sobel_v")
         {
             if (eBorderType == NPP_BORDER_NONE)
             {
@@ -385,7 +397,7 @@ int main(int argc, char* argv[])
                     oSizeROI, eBorderType));
             }
         }
-        else if (sType == "roberts_up")
+        else if (sFilterType == "roberts_up")
         {
             if (eBorderType == NPP_BORDER_NONE)
             {
@@ -402,7 +414,7 @@ int main(int argc, char* argv[])
                     oSizeROI, eBorderType));
             }
         }
-        else if (sType == "roberts_down")
+        else if (sFilterType == "roberts_down")
         {
             if (eBorderType == NPP_BORDER_NONE)
             {
@@ -419,7 +431,7 @@ int main(int argc, char* argv[])
                     oSizeROI, eBorderType));
             }
         }
-        else if (sType == "laplace")
+        else if (sFilterType == "laplace")
         {
             if (eBorderType == NPP_BORDER_NONE)
             {
@@ -436,7 +448,7 @@ int main(int argc, char* argv[])
                     oSizeROI, eMaskSize, eBorderType));
             }
         }
-        else if (sType == "gauss")
+        else if (sFilterType == "gauss")
         {
             if (eBorderType == NPP_BORDER_NONE)
             {
@@ -453,7 +465,7 @@ int main(int argc, char* argv[])
                     oSizeROI, eMaskSize, eBorderType));
             }
         }
-        else if (sType == "highpass")
+        else if (sFilterType == "highpass")
         {
             if (eBorderType == NPP_BORDER_NONE)
             {
@@ -470,7 +482,7 @@ int main(int argc, char* argv[])
                     oSizeROI, eMaskSize, eBorderType));
             }
         }
-        else if (sType == "lowpass")
+        else if (sFilterType == "lowpass")
         {
             if (eBorderType == NPP_BORDER_NONE)
             {
@@ -487,7 +499,7 @@ int main(int argc, char* argv[])
                     oSizeROI, eMaskSize, eBorderType));
             }
         }
-        else if (sType == "sharpen")
+        else if (sFilterType == "sharpen")
         {
             if (eBorderType == NPP_BORDER_NONE)
             {
@@ -504,19 +516,12 @@ int main(int argc, char* argv[])
                     oSizeROI, eBorderType));
             }
         }
-        else if (sType == "wiener")
+        else if (sFilterType == "wiener")
         {
-            if (eBorderType != NPP_BORDER_REPLICATE)
-            {
-                npp::Exception("Unsupported border type for wiener filter.");
-            }
-            else
-            {
-                NPP_CHECK_NPP(nppiFilterWienerBorder_8u_C3R(
-                    oDeviceSrc.data(), oDeviceSrc.pitch(), oSrcSize, oSrcOffset,
-                    oDeviceDst.data(), oDeviceDst.pitch(),
-                    oSizeROI, oMaskSize, oAnchor, aNoise, eBorderType));
-            }
+            NPP_CHECK_NPP(nppiFilterWienerBorder_8u_C3R(
+                oDeviceSrc.data(), oDeviceSrc.pitch(), oSrcSize, oSrcOffset,
+                oDeviceDst.data(), oDeviceDst.pitch(),
+                oSizeROI, oMaskSize, oAnchor, aNoise, eBorderType));
         }
 
 

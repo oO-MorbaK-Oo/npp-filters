@@ -11,10 +11,10 @@ Download and install the [CUDA Toolkit 12.4](https://developer.nvidia.com/cuda-d
 ## Build and Run
 
 ### Windows
-The Windows samples are built using the Visual Studio 2022 IDE.
+The Windows program is built using the Visual Studio 2022 IDE.
 
 ### Linux
-The Linux samples are built using makefiles. To use the makefiles, just run make:
+The Linux program is built using makefiles. To use the makefiles, just run make:
 ```
 $ make
 ```
@@ -27,13 +27,13 @@ Copy code
 make run
 ```
 
-This command will execute the compiled binary, filtering the input image (Lena.png) by a 5x5 box filter with constant border, and save the result as Lena_box_constant.png in the data/ directory.
+This command will execute the compiled binary, filtering the input image (Lena.png) by a 5x5 box filter with replicate border, and save the result as Lena_box_replicate.png in the data/ directory.
 
 If you wish to run the binary directly with custom input/output files, you can use:
 
 ```bash
 - Copy code
-./bin/npp-filter --input data/Lena.png --type box --border replicate --output data/Lena_rotated.png
+./bin/npp-filter --input data/Lena.png --filter box --border replicate --output data/Lena_rotated.png
 ```
 
 - Cleaning Up
