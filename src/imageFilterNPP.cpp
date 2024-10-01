@@ -267,14 +267,14 @@ int main(int argc, char* argv[])
         std::ifstream infile(sFilename.data(), std::ifstream::in);
         if (infile.good())
         {
-            std::cout << "nppiRotate opened: <" << sFilename.data()
+            std::cout << "npp-filters opened: <" << sFilename.data()
                 << "> successfully!" << std::endl;
             file_errors = 0;
             infile.close();
         }
         else
         {
-            std::cout << "nppiRotate unable to open: <" << sFilename.data() << ">"
+            std::cout << "npp-filters unable to open: <" << sFilename.data() << ">"
                 << std::endl;
             file_errors++;
             infile.close();
