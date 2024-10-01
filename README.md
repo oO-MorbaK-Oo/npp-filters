@@ -23,7 +23,6 @@ $ make
 After building the project, you can run the program using the following command:
 
 ```bash
-Copy code
 make run
 ```
 
@@ -32,7 +31,6 @@ This command will execute the compiled binary, filtering the input image (Lena.p
 If you wish to run the binary directly with custom input/output files, you can use:
 
 ```bash
-- Copy code
 ./bin/npp-filter --input data/Lena.png --filter box --border replicate --output data/Lena_rotated.png
 ```
 
@@ -41,8 +39,14 @@ To clean up the compiled binaries and other generated files, run:
 
 
 ```bash
-- Copy code
 make clean
 ```
 
 This will remove all files in the bin/ directory.
+
+## Program options
+
+| Option | Description | Values |
+|--------|-------------|--------|
+| -filter| Select filter type | box(Default), sobel_h, sobel_v, roberts_up, roberts_down, laplace, gauss, highpass, lowpass, sharpen, wiener |
+| -border| Select border type | none, replicate(Default) |
