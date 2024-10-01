@@ -34,7 +34,7 @@ If you wish to run the binary directly with custom input/output files, you can u
 ./bin/npp-filter --input data/Lena.png --filter box --border replicate --output data/Lena_rotated.png
 ```
 
-- Cleaning Up
+- Cleaning Up  
 To clean up the compiled binaries and other generated files, run:
 
 
