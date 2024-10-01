@@ -34,7 +34,7 @@
 # Define the compiler and flags
 NVCC = /usr/local/cuda/bin/nvcc
 CXX = g++
-CXXFLAGS = -std=c++11 -I/usr/local/cuda/include -Iinclude -Iinclude/UtilNPP
+CXXFLAGS = -std=c++20 -I/usr/local/cuda/include -Iinclude -Iinclude/UtilNPP
 LDFLAGS = -L/usr/local/cuda/lib64 -lcudart -lnppc -lnppial -lnppicc -lnppidei -lnppif -lnppig -lnppim -lnppist -lnppisu -lnppitc
 
 # Define directories
@@ -44,19 +44,19 @@ DATA_DIR = data
 LIB_DIR = lib
 
 # Define source files and target executable
-SRC = $(SRC_DIR)/npp-filters.cpp
+SRC = $(SRC_DIR)/imageFilterNPP.cpp
 TARGET = $(BIN_DIR)/npp-filters
 
 # Define the default rule
 all: $(TARGET)
 
 # Rule for building the target executable
-$(TARGET): $(SRC)
+build: $(SRC)
 	mkdir -p $(BIN_DIR)
 	$(NVCC) $(CXXFLAGS) $(SRC) -o $(TARGET) $(LDFLAGS)
 
 # Rule for running the application
-run: $(TARGET)
+run: build
 	./$(TARGET) --input $(DATA_DIR)/Lena.png --output $(DATA_DIR)/Lena_filtered.png
 
 # Clean up
