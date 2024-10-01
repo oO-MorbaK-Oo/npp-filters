@@ -46,7 +46,7 @@ This will remove all files in the bin/ directory.
 
 ## Program options
 
-| Option | Description | Values |
+| Options | Description | Values |
 |--------|-------------|--------|
-| -filter| Select filter type | box(Default), sobel_h, sobel_v, roberts_up, roberts_down, laplace, gauss, highpass, lowpass, sharpen, wiener |
-| -border| Select border type | none, replicate(Default) |
+| \-\-filter| Select filter type | box(Default), sobel_h, sobel_v, roberts_up, roberts_down, laplace, gauss, highpass, lowpass, sharpen, wiener |
+| \-\-border| Select border type | none, replicate(Default) |
