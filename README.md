@@ -48,5 +48,7 @@ This will remove all files in the bin/ directory.
 
 | Options | Description | Values |
 |--------|-------------|--------|
-| \-\-filter| Select filter type | box(Default), sobel_h, sobel_v, roberts_up, roberts_down, laplace, gauss, highpass, lowpass, sharpen, wiener |
-| \-\-border| Select border type | none, replicate(Default) |
+|\-\-input| Input filename | data/Lena.png(Default) |
+|\-\-output| Output filename | |
+|\-\-filter| Select filter type | box(Default), sobel_h, sobel_v, roberts_up, roberts_down, laplace, gauss, highpass, lowpass, sharpen, wiener |
+|\-\-border| Select border type | none, replicate(Default) |
