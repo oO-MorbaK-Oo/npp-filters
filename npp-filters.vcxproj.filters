@@ -21,6 +21,12 @@
     <ClCompile Include="src\stb_image_io.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="src\parameter_helpers.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\filters.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\helper_cuda.h">
@@ -75,6 +81,12 @@
       <Filter>include\UtilNPP</Filter>
     </ClInclude>
     <ClInclude Include="include\stb_image_io.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\parameter_helpers.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\filters.h">
       <Filter>include</Filter>
     </ClInclude>
   </ItemGroup>

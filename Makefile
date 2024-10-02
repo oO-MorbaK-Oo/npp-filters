@@ -44,19 +44,19 @@ DATA_DIR = data
 LIB_DIR = lib
 
 # Define source files and target executable
-SRC = $(SRC_DIR)/imageFilterNPP.cpp $(SRC_DIR)/stb_image_io.cpp
+SRC = $(SRC_DIR)/imageFilterNPP.cpp $(SRC_DIR)/stb_image_io.cpp $(SRC_DIR)/filters.cpp $(SRC_DIR)/parameter_helpers.cpp
 TARGET = $(BIN_DIR)/npp-filters
 
 # Define the default rule
 all: $(TARGET)
 
 # Rule for building the target executable
-build: $(SRC)
+$(TARGET): $(SRC)
 	mkdir -p $(BIN_DIR)
 	$(NVCC) $(CXXFLAGS) $(SRC) -o $(TARGET) $(LDFLAGS)
 
 # Rule for running the application
-run: build
+run: $(TARGET)
 	./$(TARGET) --input $(DATA_DIR)/Lena.png --output $(DATA_DIR)/Lena_filtered.png
 
 # Clean up

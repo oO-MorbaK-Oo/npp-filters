@@ -86,10 +86,14 @@
     </CudaCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\filters.cpp" />
+    <ClCompile Include="src\parameter_helpers.cpp" />
     <ClCompile Include="src\imageFilterNPP.cpp" />
     <ClCompile Include="src\stb_image_io.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="include\filters.h" />
+    <ClInclude Include="include\parameter_helpers.h" />
     <ClInclude Include="include\helper_cuda.h" />
     <ClInclude Include="include\helper_string.h" />
     <ClInclude Include="include\stb_image\stb_image.h" />

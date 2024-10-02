@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-make clean build
+make clean all
 
 filters=(box sobel_h sobel_v roberts_up roberts_down laplace gauss highpass lowpass sharpen wiener)
 borders=(none replicate)
