@@ -98,7 +98,7 @@ int main(int argc, char* argv[])
             exit(EXIT_FAILURE);
         }
 
-        // declare a host image object for an 8-bit grayscale image
+        // declare a host image object for an 8-bit RGB image
         npp::ImageCPU_8u_C3 oHostSrc;
         // load image from disk
         stb::loadImage(parameters.getInputFilename(), oHostSrc);
