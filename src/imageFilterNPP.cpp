@@ -32,11 +32,7 @@
 #pragma warning(disable : 4819)
 #endif
 
-#include <Exceptions.h>
-#include <ImagesCPU.h>
-#include <ImagesNPP.h>
 
-#include <string.h>
 #include <vector>
 #include <fstream>
 #include <iostream>
@@ -47,85 +43,10 @@
 #include <helper_cuda.h>
 #include <helper_string.h>
 
-#define STB_IMAGE_IMPLEMENTATION
-#include "stb_image/stb_image.h"
-#define STB_IMAGE_WRITE_IMPLEMENTATION
-#include "stb_image/stb_image_write.h"
+#include <ImagesNPP.h>
 
- // Load 8,24,32 bits image using stb_image
- // and return an npp::ImageCPU_8u_C3
-void loadImage(const std::string& rFileName, npp::ImageCPU_8u_C3& rImage)
-{
-    int width = 0, height = 0, channels = 0;
-    uint8_t* img = stbi_load(rFileName.c_str(), &width, &height, &channels, 0);
-    if (img == NULL)
-    {
-        printf("Error: Can't load %s image\n", rFileName.c_str());
-        throw npp::Exception("loadImage failed (stbi_load return null)");
-    }
-    if (channels != 1 && channels != 3 && channels != 4) {
-        stbi_image_free(img);
-        printf("Error: %s must be an 8, 24 or 32 bits image\n", rFileName.c_str());
-        throw npp::Exception("loadImage failed (invalid pixel format)");
-    }
+#include "stb_image_io.h"
 
-    npp::ImageCPU_8u_C3 oImage(width, height);
-    Npp8u* pDstLine = oImage.data();
-    const unsigned int nDstPitch = oImage.pitch();
-    const uint8_t* pSrcLine = img;
-    const unsigned int nSrcPitch = width * channels;
-
-    if (channels == 1) {
-        // Grey
-        for (size_t iLine = 0; iLine < height; ++iLine)
-        {
-            npp::Pixel<Npp8u, 4>* pDstPixels = (npp::Pixel<Npp8u, 4>*)pDstLine;
-            for (size_t iPixel = 0; iPixel < width; ++iPixel)
-            {
-                pDstPixels[iPixel].x = pSrcLine[iPixel];
-                pDstPixels[iPixel].y = pSrcLine[iPixel];
-                pDstPixels[iPixel].z = pSrcLine[iPixel];
-            }
-            pSrcLine += nSrcPitch;
-            pDstLine += nDstPitch;
-        }
-    }
-    else if (channels == 4) {
-        // RGBA
-        for (size_t iLine = 0; iLine < height; ++iLine)
-        {
-            const  npp::Pixel<Npp8u, 4>* pSrcPixels = (npp::Pixel<Npp8u, 4>*)pSrcLine;
-            npp::Pixel<Npp8u, 3>* pDstPixels = (npp::Pixel<Npp8u, 3>*)pDstLine;
-            for (size_t iPixel = 0; iPixel < width; ++iPixel)
-            {
-                pDstPixels[iPixel].x = pSrcPixels[iPixel].x;
-                pDstPixels[iPixel].y = pSrcPixels[iPixel].y;
-                pDstPixels[iPixel].z = pSrcPixels[iPixel].z;
-            }
-            pSrcLine += nSrcPitch;
-            pDstLine += nDstPitch;
-        }
-    }
-    else {
-        // RGB
-        for (size_t iLine = 0; iLine < height; ++iLine)
-        {
-            memcpy(pDstLine, pSrcLine, width * channels);
-            pSrcLine += nSrcPitch;
-            pDstLine += nDstPitch;
-        }
-    }
-
-    // swap the user given image with our result image, effecively
-    // moving our newly loaded image data into the user provided shell
-    oImage.swap(rImage);
-    stbi_image_free(img);
-}
-
-void saveImage(const std::string& rFileName, const npp::ImageCPU_8u_C3& rImage)
-{
-    stbi_write_png(rFileName.c_str(), rImage.width(), rImage.height(), 3, rImage.data(), rImage.pitch());
-}
 
 bool printfNPPinfo(int argc, char* argv[])
 {
@@ -147,6 +68,8 @@ bool printfNPPinfo(int argc, char* argv[])
     bool bVal = checkCudaCapabilities(1, 0);
     return bVal;
 }
+
+
 
 int main(int argc, char* argv[])
 {
@@ -307,7 +230,7 @@ int main(int argc, char* argv[])
         // declare a host image object for an 8-bit grayscale image
         npp::ImageCPU_8u_C3 oHostSrc;
         // load gray-scale image from disk
-        loadImage(sFilename, oHostSrc);
+        stb::loadImage(sFilename, oHostSrc);
         // declare a device image and copy construct from the host image,
         // i.e. upload host to device
         npp::ImageNPP_8u_C3 oDeviceSrc(oHostSrc);
@@ -530,7 +453,7 @@ int main(int argc, char* argv[])
         // and copy the device result data into it
         oDeviceDst.copyTo(oHostDst.data(), oHostDst.pitch());
 
-        saveImage(sResultFilename, oHostDst);
+        stb::saveImage(sResultFilename, oHostDst);
         std::cout << "Saved image: " << sResultFilename << std::endl;
 
         nppiFree(oDeviceSrc.data());

@@ -87,12 +87,14 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="src\imageFilterNPP.cpp" />
+    <ClCompile Include="src\stb_image_io.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\helper_cuda.h" />
     <ClInclude Include="include\helper_string.h" />
     <ClInclude Include="include\stb_image\stb_image.h" />
     <ClInclude Include="include\stb_image\stb_image_write.h" />
+    <ClInclude Include="include\stb_image_io.h" />
     <ClInclude Include="include\UtilNPP\Exceptions.h" />
     <ClInclude Include="include\UtilNPP\Image.h" />
     <ClInclude Include="include\UtilNPP\ImageAllocatorsCPU.h" />

@@ -18,6 +18,9 @@
     <ClCompile Include="src\imageFilterNPP.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="src\stb_image_io.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\helper_cuda.h">
@@ -70,6 +73,9 @@
     </ClInclude>
     <ClInclude Include="include\UtilNPP\SignalsNPP.h">
       <Filter>include\UtilNPP</Filter>
+    </ClInclude>
+    <ClInclude Include="include\stb_image_io.h">
+      <Filter>include</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

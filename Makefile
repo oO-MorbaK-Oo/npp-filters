@@ -44,7 +44,7 @@ DATA_DIR = data
 LIB_DIR = lib
 
 # Define source files and target executable
-SRC = $(SRC_DIR)/imageFilterNPP.cpp
+SRC = $(SRC_DIR)/imageFilterNPP.cpp $(SRC_DIR)/stb_image_io.cpp
 TARGET = $(BIN_DIR)/npp-filters
 
 # Define the default rule
